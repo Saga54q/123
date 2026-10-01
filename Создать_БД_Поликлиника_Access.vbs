@@ -1,9 +1,3 @@
-' ==============================================================================
-' Автоматический скрипт создания базы данных Microsoft Access (.accdb)
-' Тема: "Поликлиника" (Вариант 14 - Сагадиев Амир)
-import pandas as pd
-' ==============================================================================
-
 Option Explicit
 
 Dim fso, currentDir, dbPath, accessApp, db
@@ -16,7 +10,7 @@ If fso.FileExists(dbPath) Then
     On Error Resume Next
     fso.DeleteFile dbPath, True
     If Err.Number <> 0 Then
-        MsgBox "Пожалуйста, закройте открытый файл базы данных Поликлиника_База_Данных.accdb перед повторным запуском!", vbExclamation, "Внимание"
+        MsgBox "Пожалуйста, закройте открытый файл Поликлиника_База_Данных.accdb перед повторным запуском!", vbExclamation, "Внимание"
         WScript.Quit
     End If
     On Error GoTo 0
@@ -26,18 +20,13 @@ Set accessApp = CreateObject("Access.Application")
 accessApp.NewCurrentDatabase dbPath
 Set db = accessApp.CurrentDb
 
-' -------------------------------------------------------------
-' 1. СОЗДАНИЕ ТАБЛИЦ НА РУССКОМ ЯЗЫКЕ (MS Access SQL / DAO)
-' -------------------------------------------------------------
-
-' 1) Таблица Специальности
+' 1. Создание таблиц
 db.Execute "CREATE TABLE [Специальности] (" & _
            "[КодСпециальности] AUTOINCREMENT CONSTRAINT PK_Специальности PRIMARY KEY, " & _
            "[НаименованиеСпециальности] TEXT(100) NOT NULL, " & _
            "[Описание] TEXT(255));"
 db.Execute "CREATE UNIQUE INDEX UQ_Специальность ON [Специальности] ([НаименованиеСпециальности]);"
 
-' 2) Таблица Врачи
 db.Execute "CREATE TABLE [Врачи] (" & _
            "[КодВрача] AUTOINCREMENT CONSTRAINT PK_Врачи PRIMARY KEY, " & _
            "[ФИО_Врача] TEXT(100) NOT NULL, " & _
@@ -47,7 +36,6 @@ db.Execute "CREATE TABLE [Врачи] (" & _
            "[Категория] TEXT(30), " & _
            "[Статус] TEXT(20));"
 
-' 3) Таблица Пациенты
 db.Execute "CREATE TABLE [Пациенты] (" & _
            "[КодПациента] AUTOINCREMENT CONSTRAINT PK_Пациенты PRIMARY KEY, " & _
            "[ФИО_Пациента] TEXT(100) NOT NULL, " & _
@@ -58,7 +46,6 @@ db.Execute "CREATE TABLE [Пациенты] (" & _
            "[ПолисОМС] TEXT(16) NOT NULL);"
 db.Execute "CREATE UNIQUE INDEX UQ_ПолисОМС ON [Пациенты] ([ПолисОМС]);"
 
-' 4) Таблица МедицинскиеУслуги
 db.Execute "CREATE TABLE [МедицинскиеУслуги] (" & _
            "[КодУслуги] AUTOINCREMENT CONSTRAINT PK_МедицинскиеУслуги PRIMARY KEY, " & _
            "[НаименованиеУслуги] TEXT(150) NOT NULL, " & _
@@ -67,7 +54,6 @@ db.Execute "CREATE TABLE [МедицинскиеУслуги] (" & _
            "[ДлительностьМинут] INTEGER);"
 db.Execute "CREATE UNIQUE INDEX UQ_Услуга ON [МедицинскиеУслуги] ([НаименованиеУслуги]);"
 
-' 5) Таблица Диагнозы
 db.Execute "CREATE TABLE [Диагнозы] (" & _
            "[КодДиагноза] AUTOINCREMENT CONSTRAINT PK_Диагнозы PRIMARY KEY, " & _
            "[КодМКБ] TEXT(10) NOT NULL, " & _
@@ -75,7 +61,6 @@ db.Execute "CREATE TABLE [Диагнозы] (" & _
            "[Категория] TEXT(100));"
 db.Execute "CREATE UNIQUE INDEX UQ_КодМКБ ON [Диагнозы] ([КодМКБ]);"
 
-' 6) Таблица РасписаниеПриема
 db.Execute "CREATE TABLE [РасписаниеПриема] (" & _
            "[КодРасписания] AUTOINCREMENT CONSTRAINT PK_РасписаниеПриема PRIMARY KEY, " & _
            "[КодВрача] LONG NOT NULL, " & _
@@ -84,7 +69,6 @@ db.Execute "CREATE TABLE [РасписаниеПриема] (" & _
            "[ВремяОкончания] DATETIME NOT NULL, " & _
            "[Кабинет] TEXT(10) NOT NULL);"
 
-' 7) Таблица ЗаписиНаПрием
 db.Execute "CREATE TABLE [ЗаписиНаПрием] (" & _
            "[КодЗаписи] AUTOINCREMENT CONSTRAINT PK_ЗаписиНаПрием PRIMARY KEY, " & _
            "[НомерТалона] TEXT(20) NOT NULL, " & _
@@ -96,7 +80,6 @@ db.Execute "CREATE TABLE [ЗаписиНаПрием] (" & _
            "[Жалобы] MEMO);"
 db.Execute "CREATE UNIQUE INDEX UQ_НомерТалона ON [ЗаписиНаПрием] ([НомерТалона]);"
 
-' 8) Таблица Назначения
 db.Execute "CREATE TABLE [Назначения] (" & _
            "[КодНазначения] AUTOINCREMENT CONSTRAINT PK_Назначения PRIMARY KEY, " & _
            "[КодЗаписи] LONG NOT NULL, " & _
@@ -107,7 +90,6 @@ db.Execute "CREATE TABLE [Назначения] (" & _
            "[Количество] INTEGER, " & _
            "[Примечания] TEXT(255));"
 
-' 9) Таблица Пользователи
 db.Execute "CREATE TABLE [Пользователи] (" & _
            "[КодПользователя] AUTOINCREMENT CONSTRAINT PK_Пользователи PRIMARY KEY, " & _
            "[Логин] TEXT(50) NOT NULL, " & _
@@ -117,9 +99,7 @@ db.Execute "CREATE TABLE [Пользователи] (" & _
            "[Активен] YESNO);"
 db.Execute "CREATE UNIQUE INDEX UQ_Логин ON [Пользователи] ([Логин]);"
 
-' -------------------------------------------------------------
-' 2. НАСТРОЙКА РЕЛЯЦИОННЫХ СВЯЗЕЙ И ССЫЛОЧНОЙ ЦЕЛОСТНОСТИ
-' -------------------------------------------------------------
+' 2. Настройка связей
 SubAddRelation db, "Связь_Специальности_Врачи", "Специальности", "Врачи", "КодСпециальности", "КодСпециальности", 256
 SubAddRelation db, "Связь_Специальности_Услуги", "Специальности", "МедицинскиеУслуги", "КодСпециальности", "КодСпециальности", 256
 SubAddRelation db, "Связь_Врачи_Расписание", "Врачи", "РасписаниеПриема", "КодВрача", "КодВрача", 256 + 4096
@@ -129,9 +109,7 @@ SubAddRelation db, "Связь_Записи_Назначения", "ЗаписиНаПрием", "Назначения", "Ко
 SubAddRelation db, "Связь_Диагнозы_Назначения", "Диагнозы", "Назначения", "КодДиагноза", "КодДиагноза", 256
 SubAddRelation db, "Связь_Услуги_Назначения", "МедицинскиеУслуги", "Назначения", "КодУслуги", "КодУслуги", 256
 
-' -------------------------------------------------------------
-' 3. НАПОЛНЕНИЕ ДАННЫМИ ПОЛИКЛИНИКИ
-' -------------------------------------------------------------
+' 3. Заполнение данными
 db.Execute "INSERT INTO [Специальности] ([НаименованиеСпециальности], [Описание]) VALUES ('Терапевт', 'Первичный осмотр и общая терапия');"
 db.Execute "INSERT INTO [Специальности] ([НаименованиеСпециальности], [Описание]) VALUES ('Кардиолог', 'Заболевания сердечно-сосудистой системы');"
 db.Execute "INSERT INTO [Специальности] ([НаименованиеСпециальности], [Описание]) VALUES ('Невролог', 'Заболевания нервной системы');"
@@ -216,9 +194,7 @@ db.Execute "INSERT INTO [Пользователи] ([Логин], [Пароль], [ФИО], [Роль], [Актив
 db.Execute "INSERT INTO [Пользователи] ([Логин], [Пароль], [ФИО], [Роль], [Активен]) " & _
            "VALUES ('user', 'user123', 'Регистратор поликлиники', 'Пользователь', True);"
 
-' -------------------------------------------------------------
-' 4. СОЗДАНИЕ 8 РУССКОЯЗЫЧНЫХ SQL-ЗАПРОСОВ
-' -------------------------------------------------------------
+' 4. Создание запросов
 db.CreateQueryDef "Запрос_01_СвободныеТалоныПоСпециальности", _
     "PARAMETERS [Введите дату приёма (ДД.ММ.ГГГГ)] DateTime, [Введите специальность врача] Text ( 100 ); " & _
     "SELECT [Врачи].[КодВрача], [Врачи].[ФИО_Врача] AS [Врач], [Специальности].[НаименованиеСпециальности] AS [Специальность], " & _
@@ -298,11 +274,7 @@ accessApp.CloseCurrentDatabase
 accessApp.Quit
 Set accessApp = Nothing
 
-MsgBox "База данных MS Access на русском языке успешно создана:" & vbCrLf & dbPath & vbCrLf & vbCrLf & _
-       "В базе созданы:" & vbCrLf & _
-       "- 8 русскоязычных таблиц со связями и целостностью данных" & vbCrLf & _
-       "- 8 русскоязычных запросов" & vbCrLf & _
-       "- Демо-данные и таблица учетных записей", vbInformation, "Успешно создано!"
+MsgBox "База данных MS Access успешно создана:" & vbCrLf & dbPath, vbInformation, "Успешно создано"
 
 Sub SubAddRelation(oDb, sRelName, sPrimaryTbl, sForeignTbl, sPrimaryCol, sForeignCol, lAttr)
     Dim oRel, oFld
